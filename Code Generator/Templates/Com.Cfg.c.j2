@@ -1,0 +1,167 @@
+/*******************************************************************************************************************************
+FileName:                                               Com_Cfg.c
+AUTOSAR Version:                                          4.2.2
+******************************************************************************************************************************/
+/******************************************************************************************************************************
+ **                                                     Includes                                                             **
+ ******************************************************************************************************************************/
+#include "Inc/Com.h"
+#include "Com_Cfg.h"
+#include "Inc/Com_Types.h"
+#include "Platform_Types.h"
+ /*****************************************************************************************************************************
+  **                                         Post-Build Configuration variables values                                       **
+  *****************************************************************************************************************************/
+/* ComSignal Buffers */
+uint8 ComSignal0Buffer[1] = { 0 };
+uint8 ComSignal1Buffer[1];
+uint8 ComSignal2Buffer[1];
+uint8 ComSignal3Buffer[1];
+uint8 ComSignal4Buffer[1];
+uint8 ComSignal5Buffer[1];
+uint8 ComSignal6Buffer[1];
+uint8 ComSignal7Buffer[1]; //8
+uint8 ComSignal8Buffer[1]; //4
+
+ /* ComGroupSignal Buffers */
+ uint8 ComGroupSignal0Buffer[1];
+ uint8 ComGroupSignal1Buffer[1];
+ uint8 ComGroupSignal2Buffer[1];
+ uint8 ComGroupSignal3Buffer[1];
+
+/* Com IPdu Buffers */
+uint8 ComIPdu0Buffer[8]; // signals 1 bit
+uint8 ComIPdu1Buffer[8];// signals of speed and tachometer
+
+void Com_CbkSignal0RxAck(void)
+{
+}
+
+void Com_CbkSignal1RxAck(void)
+{
+    //UARTprintf("Com_CbkSignal1TxAck\n");
+}
+void Com_CbkSignal2RxAck(void)
+{
+    //printf("Com_CbkSignal0TxAck\n");
+}
+
+void Com_CbkSignal3RxAck(void)
+{
+    //UARTprintf("Com_CbkSignal1TxAck\n");
+}
+void Com_CbkSignal4RxAck(void)
+{
+    //printf("Com_CbkSignal0TxAck\n");
+}
+
+void Com_CbkSignal5RxAck(void)
+{
+    //UARTprintf("Com_CbkSignal1TxAck\n");
+}
+void Com_CbkSignal6RxAck(void)
+{
+    //printf("Com_CbkSignal0TxAck\n");
+}
+
+void Com_CbkSignal7RxAck(void)
+{
+    //UARTprintf("Com_CbkSignal1TxAck\n");
+}
+void Com_CbkSignal8RxAck(void)
+{
+    //printf("Com_CbkSignal0TxAck\n");
+}
+
+
+
+
+Com_Type Com =
+{
+    .ComConfig=
+    {
+        .ComIPdu=
+        { {% for groupIPDU in gen_model.groupIPDUs %}
+            {
+               .ComIPduDirection = {{groupIPDU['IPduDirection']}},
+               .ComIPduHandleId= {{groupIPDU['IPduHandleId']}},
+               .ComIPduSignalProcessing = {{groupIPDU['IPduSignalProcessing']}},
+               .ComIPduType = {{groupIPDU['IPduType']}},
+               .ComIPduSignalGroupRef = 
+               { {% for IPduGroupRef in groupIPDU['IPduSignalGroupRefs'] %}
+                    &Com.ComConfig.ComSignalGroup[{{IPduGroupRef}}],
+                    {% if IPduGroupRef == groupIPDU['IPduSignalGroupRefs'][-1] %}NULL{% endif %} {% endfor %}
+               },
+               .ComIPduSignalRef = 
+               { {% for IPduSignalRef in groupIPDU['IPduSignalRefs'] %}
+                    &Com.ComConfig.ComSignal[{{IPduSignalRef}}],
+                    {% if IPduSignalRef == groupIPDU['IPduSignalRefs'][-1] %}NULL{% endif %} {% endfor %}
+               },
+               {% if groupIPDU['TxIPdu'] is defined %}
+               .ComTxIPdu =
+               {
+                    .ComMinimumDelayTime = {{groupIPDU['TxIPdu']['MinimumDelayTime']}},
+                    .ComTxIPduClearUpdateBit = {{groupIPDU['TxIPdu']['TxIPduClearUpdateBit']}},
+                    .ComTxIPduUnusedAreasDefault = {{groupIPDU['TxIPdu']['TxIPduUnusedAreasDefault']}},
+                    .ComTxModeFalse =
+                    {
+                        .ComTxMode =
+                        {
+                            .ComTxModeMode = {{groupIPDU['TxIPdu']['TxModeFalse']['TxModeMode']}},
+                            .ComTxModeNumberOfRepetitions = {{groupIPDU['TxIPdu']['TxModeFalse']['TxModeNumberOfRepetitions']}},
+                            .ComTxModeRepetitionPeriod = {{groupIPDU['TxIPdu']['TxModeFalse']['TxModeRepetitionPeriod']}},
+                            .ComTxModeTimePeriod = {{groupIPDU['TxIPdu']['TxModeFalse']['TxModeTimePeriod']}}
+                        }
+                    }
+               },
+               {% endif %}
+               .ComBufferRef = ComIPdu{{groupIPDU['IPduHandleId']}}Buffer,
+               .ComIPduLength = {{groupIPDU['IPduLength']}}
+            }{% if groupIPDU != gen_model.groupIPDUs[-1] %},{% endif %} {% endfor %}
+        }
+        .ComSignal=
+        { {% for signal in gen_model.signals %}
+            {
+                .ComBitPosition = {{signal['bit-position']}},
+                .ComBitSize= {{signal['bit-size']}},
+                .ComHandleId = {{signal['handle-id']}},
+                .ComSignalLength = {{signal['SignalLength']}},
+                .ComSignalType= {{signal['SignalType']}},
+                .ComTransferProperty =  {{signal['TransferProperty']}},
+                .ComUpdateBitPosition = {{signal['UpdateBitPosition']}},
+                .ComSignalInitValue = COM_SIGNAL_INIT_VALUE,
+                .ComBufferRef = ComSignal{{signal['handle-id']}}Buffer,
+                .ComIpduHandler = {{signal['IpduHandler']}}
+            }{% if signal != gen_model.signals[-1] %},{% endif %} {% endfor %}
+        },
+        .ComGroupSignal=
+        { {% for groupsignal in gen_model.groupsignals %}
+            {
+                .ComBitPosition = {{groupsignal['BitPosition']}},
+                .ComBitSize = {{groupsignal['BitSize']}},
+                .ComHandleId = {{groupsignal['HandleId']}},
+                .ComSignalLength = {{groupsignal['SignalLength']}},
+                .ComSignalType = {{groupsignal['SignalType']}},
+                .ComTransferProperty = {{groupsignal['TransferProperty']}},
+                .ComSignalInitValue = COM_SIGNAL_INIT_VALUE,
+                .ComBufferRef = ComGroupSignal{{groupsignal['HandleId']}}Buffer
+            }{% if groupsignal != gen_model.groupsignals[-1] %},{% endif %} {% endfor %}
+        },
+        .ComSignalGroup =
+        { {% for signalgroup in gen_model.signalgroups %}
+            {
+                .ComHandleId = {{signalgroup['HandleId']}},
+                .ComNotification = {{signalgroup['Notification']}},
+                .ComTransferProperty = {{signalgroup['TransferProperty']}},
+                .ComUpdateBitPosition = {{signalgroup['UpdateBitPosition']}},
+                .ComGroupSignalRef = 
+                { {%for groupsignalref in signalgroup['GroupSignalRefs']%}
+                    &Com.ComConfig.ComGroupSignal[groupsignalref],
+                    {%if groupsignalref == signalgroup['GroupSignalRefs'][-1]%}NULL{%endif%} {%endfor%}
+                },
+                .ComGroupSignalsNumbers = {{signalgroup['GroupSignalsNumbers']}}
+            }{% if signalgroup != gen_model.signalgroups[-1] %},{% endif %} {% endfor %}
+        },
+    }
+};
+         
