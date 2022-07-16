@@ -1,0 +1,50 @@
+﻿  Compiling CUDA source file Gen\Com_Cfg.cu...
+  Compiling CUDA source file kernel.cu...
+  
+  C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o "C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\x64\Debug\Com_Cfg.cu.obj" "C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\Gen\Com_Cfg.cu" 
+  
+  C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7\include"  -G   --keep-dir x64\Debug  -maxrregcount=0  --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc142.pdb /FS /Zi /RTC1 /MDd " -o "C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\x64\Debug\kernel.cu.obj" "C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu" 
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\stb_image.h(4238): warning #550-D: variable "old_limit" was set but never used
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\stb_image.h(5179): warning #550-D: variable "idata_limit_old" was set but never used
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\stb_image.h(6998): warning #550-D: variable "out_size" was set but never used
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\stb_image.h(6999): warning #550-D: variable "delays_size" was set but never used
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(190): warning #177-D: variable "ComIPduLocal" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(191): warning #177-D: variable "ComBitSize" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(192): warning #177-D: variable "ComBitPosition" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(221): warning #177-D: variable "ComSignalLocal" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(222): warning #177-D: variable "ComIPduLocal" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(224): warning #177-D: variable "ComBitPosition" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(225): warning #177-D: variable "ComIPduLengthBits" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(255): warning #186-D: pointless comparison of unsigned integer with zero
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(285): warning #177-D: variable "valeo" was declared but never referenced
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(35): warning #550-D: variable "ComState" was set but never used
+  
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(284): warning #20044-D: extern declaration of the entity sdata is treated as a static definition
+  
+  Com_Cfg.cu
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(255): warning #186-D: pointless comparison of unsigned integer with zero
+  
+  kernel.cu
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(191): warning C4244: 'initializing': conversion from 'uint64' to 'uint8', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(192): warning C4244: 'initializing': conversion from 'uint64' to 'uint8', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(202): warning C4244: 'argument': conversion from 'double' to 'unsigned int', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(202): warning C4244: 'argument': conversion from 'double' to 'unsigned int', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(223): warning C4244: 'initializing': conversion from 'uint64' to 'uint8', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(224): warning C4244: 'initializing': conversion from 'uint64' to 'uint8', possible loss of data
+C:\Users\Fatma Ahmed\source\repos\Com On GPU\Com On GPU\kernel.cu(231): warning C4244: 'argument': conversion from 'float' to 'unsigned int', possible loss of data
+     Creating library C:\Users\Fatma Ahmed\source\repos\Com On GPU\x64\Debug\Com On GPU.lib and object C:\Users\Fatma Ahmed\source\repos\Com On GPU\x64\Debug\Com On GPU.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Com On GPU.vcxproj -> C:\Users\Fatma Ahmed\source\repos\Com On GPU\x64\Debug\Com On GPU.exe
