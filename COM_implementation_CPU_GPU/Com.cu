@@ -230,3 +230,176 @@ uint8 Com_ReceiveSignalGroup_GPU(Com_SignalGroupIdType SignalGroupId)
 
 	return COM_SERVICE_NOT_AVAILABLE;
 }
+
+/*********************************************************************************************************************************
+ Service name:               Com_UpdateShadowSignal_GPU
+ Service ID:                    0x0c
+ Parameters (in):           SignalId--> Id of group signal to be updated.(unit16)
+							SignalDataPtr --> Reference to the group signal data to be updated.
+ Parameters (inout):            None
+ Parameters (out):              None
+ Return value:                  None
+ Description:        The service Com_UpdateShadowSignal updates a group signal with the data referenced by SignalDataPtr.
+ *******************************************************************************************************************************/
+__global__ void copy_data_to_shadowBuffer_on_Kernel(uint8* d_signalgroup_in, uint8 SignalDataPtr, uint8 ID)
+{
+	uint8 ThreadIndex = blockIdx.x * blockDim.x + threadIdx.x;
+
+	/* Check that the group signal ID is a valid ID*/
+
+	if (ThreadIndex < ComMaxGroupSignalCnt && ThreadIndex == ID)
+	{
+		/* Copy group signal to group signal buffer */
+		d_signalgroup_in[0] = SignalDataPtr;
+	}
+
+
+}
+void Com_UpdateShadowSignal_GPU(Com_SignalIdType SignalId, const void* SignalDataPtr)
+{
+	uint8 SignalData = *((uint8*)SignalDataPtr);
+	Com_GroupSignalType ComGroupSignalLocal = Com.ComConfig.ComGroupSignal[SignalId];
+	/* Get the group_signal ID */
+	uint8 ID = Com.ComConfig.ComGroupSignal[SignalId].ComHandleId;
+
+	uint8* h_data = 0;
+
+	uint8 h_Length = ComGroupSignalLocal.ComSignalLength;
+	/*GPU Variables*/
+	uint8* d_GroupSignalLocal;
+	uint8* d_data;
+
+	cudaEvent_t start1, stop1;
+	cudaEventCreate(&start1);
+	cudaEventCreate(&stop1);
+	cudaEventRecord(start1);
+
+	/*allocate GPU memory*/
+	cudaMalloc((void**)&d_GroupSignalLocal, h_Length * sizeof(uint8));
+	cudaMalloc((void**)&d_data, Signals_Factor * h_Length * sizeof(uint8));
+
+	cudaEventRecord(stop1);
+	cudaEventSynchronize(stop1);
+
+	cudaEventElapsedTime(&gpu_time[0], start1, stop1);
+
+	cudaEvent_t start2, stop2;
+	cudaEventCreate(&start2);
+	cudaEventCreate(&stop2);
+	cudaEventRecord(start2);
+
+	/*Call Kernel*/
+	copy_data_to_shadowBuffer_on_Kernel <<<1, ComMaxGroupSignalCnt * Signals_Factor>>> (d_GroupSignalLocal, SignalData, SignalId);
+	cudaDeviceSynchronize();
+
+	cudaEventRecord(stop2);
+	cudaEventSynchronize(stop2);
+	cudaEventElapsedTime(&gpu_time[0], start2, stop2);
+
+	cudaEvent_t start3, stop3;
+	cudaEventCreate(&start3);
+	cudaEventCreate(&stop3);
+	cudaEventRecord(start3);
+
+	cudaMemcpy(ComGroupSignalLocal.ComBufferRef, d_GroupSignalLocal, h_Length * sizeof(uint8), cudaMemcpyDeviceToHost);
+
+	cudaEventRecord(stop3);
+	cudaEventSynchronize(stop3);
+	cudaEventElapsedTime(&gpu_time[1], start3, stop3);
+
+
+
+
+	// Return the results to the signal
+
+}
+
+/*********************************************************************************************************************************
+ Service name:               Com_UpdateShadowSignal_GPU_ARRAY
+ Service ID:                    0x0c
+ Parameters (in):           SignalId--> Id of group signal to be updated.(unit16)
+							SignalDataPtr --> Reference to the group signal data to be updated.
+ Parameters (inout):            None
+ Parameters (out):              None
+ Return value:                  None
+ Description:        The service Com_UpdateShadowSignal updates a group signal with the data referenced by SignalDataPtr.
+ *******************************************************************************************************************************/
+__global__ void copy_data_to_shadowBuffer_on_Kernel_ARRAY(uint8* d_signalgroup_in, uint8* SignalDataPtr)
+{
+	uint8 ThreadIndex = blockIdx.x * blockDim.x + threadIdx.x;
+
+	/* Check that the group signal ID is a valid ID*/
+
+	if (ThreadIndex < ComMaxGroupSignalCnt)
+	{
+		/* Copy group signal to group signal buffer */
+		d_signalgroup_in[ThreadIndex] = SignalDataPtr[ThreadIndex];
+	}
+
+
+}
+
+void Com_UpdateShadowSignal_GPU_ARRAY(uint8* SignalIds, uint8* SignalDataPtr)
+{
+	Com_GroupSignalType ComGroupSignalLocal;
+	/*allocate CPU memory*/
+	uint8* c = (uint8*)malloc(ComMaxGroupSignalCnt * sizeof(uint8));
+
+	/*GPU Variables*/
+	uint8* d_GroupSignalLocal;
+	uint8* d_SignalDataPtr;
+
+	cudaEvent_t start1, stop1;
+	cudaEventCreate(&start1);
+	cudaEventCreate(&stop1);
+	cudaEventRecord(start1);
+
+	/*allocate GPU memory*/
+	cudaMalloc((void**)&d_GroupSignalLocal, ComMaxGroupSignalCnt * sizeof(uint8));
+	cudaMalloc((void**)&d_SignalDataPtr, ComMaxGroupSignalCnt * sizeof(uint8));
+
+	cudaMemcpy(d_SignalDataPtr, SignalDataPtr, ComMaxGroupSignalCnt * sizeof(uint8), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_GroupSignalLocal, c, ComMaxGroupSignalCnt * sizeof(uint8), cudaMemcpyHostToDevice);
+	
+	cudaEventRecord(stop1);
+	cudaEventSynchronize(stop1);
+
+	cudaEventElapsedTime(&gpu_time[0], start1, stop1);
+
+	cudaEvent_t start2, stop2;
+	cudaEventCreate(&start2);
+	cudaEventCreate(&stop2);
+	cudaEventRecord(start2);
+
+	/*Call Kernel*/
+	copy_data_to_shadowBuffer_on_Kernel_ARRAY <<< 1, ComMaxGroupSignalCnt >>> (d_GroupSignalLocal, d_SignalDataPtr);
+
+	cudaDeviceSynchronize();
+
+	cudaEventRecord(stop2);
+	cudaEventSynchronize(stop2);
+
+	cudaEventElapsedTime(&gpu_time[1], start2, stop2);
+
+	cudaEvent_t start3, stop3;
+	cudaEventCreate(&start3);
+	cudaEventCreate(&stop3);
+	cudaEventRecord(start3);
+
+	// Return the results to the signal
+	cudaMemcpy(c, d_GroupSignalLocal, ComMaxGroupSignalCnt * sizeof(uint8), cudaMemcpyDeviceToHost);
+
+	cudaEventRecord(stop3);
+	cudaEventSynchronize(stop3);
+	
+	cudaEventElapsedTime(&gpu_time[2], start3, stop3);
+
+
+	int len = sizeof(c)/sizeof(uint8);
+
+	for (uint8 i = 0; i < 5; i++)
+	{
+		*Com.ComConfig.ComGroupSignal[SignalIds[i]].ComBufferRef = c[i];
+	}
+
+}
