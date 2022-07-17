@@ -89,3 +89,144 @@ void Com_ReceiveShadowSignal(Com_SignalIdType SignalId, void* SignalDataPtr)
 
 	}
 }
+
+uint8 Com_ReceiveSignalGroup_GPU(Com_SignalGroupIdType SignalGroupId)
+{
+	/* Definition of Variables */
+	Com_GroupSignalType* ComGroupSignalLocal = NULL;
+	Com_IPduType* ComIPduLocal = NULL;
+
+	/***************************/
+
+	/***************************************************************************************************************************/
+	/*          The service Com_ReceiveSignalGroup shall copy the received singal group from I-PDU to shadow buffer            */
+	/* After this call, the group signals could be copied from the shadow buffer to the rte by calling Com_ReceiveShadowSignal */
+	/***************************************************************************************************************************/
+
+	/* Check that the id is valid */
+	if (SignalGroupId <= ComMaxSignalGroupCnt)
+	{
+		/* Get the signal */
+		const Com_SignalGroupType* ComSignalGroup = &Com.ComConfig.ComSignalGroup[SignalGroupId];
+
+		/* Get IPDU */
+		ComIPduLocal = &Com.ComConfig.ComIPdu[ComSignalGroup->ComIPduHandleId];
+
+		uint8 ComSignalGroupIndex = ComSignalGroup->ComIPduHandleIndex;
+
+		/* Initialize GPU Streams */
+		int N_STREAMS = ComIPduLocal->ComIPduSignalGroupRef[ComSignalGroupIndex]->ComGroupSignalsNumbers;
+		cudaStream_t* stream = new cudaStream_t[N_STREAMS];
+
+		for (uint8 ComGroupSignalIndex = 0; ComGroupSignalIndex < N_STREAMS; ComGroupSignalIndex++)
+		{
+			/* Create Stream */
+			cudaStreamCreate(&stream[ComGroupSignalIndex]);
+
+			/*Get Group Signal*/
+			ComGroupSignalLocal = ComIPduLocal->ComIPduSignalGroupRef[ComSignalGroupIndex]->ComGroupSignalRef[ComGroupSignalIndex];
+
+			/* GPU Operations Begin here */
+			uint8 threads = NUM_THREADS;
+			uint16 blocks = ceil(ComGroupSignalLocal->ComBitSize / (float)threads) * Signals_Factor;
+			uint8 length = ComIPduLocal->ComIPduLength;
+
+			uint8* h_output_values = ComGroupSignalLocal->ComBufferRef;
+			uint8* h_input_values = ComIPduLocal->ComBufferRef;
+			uint8* h_data = h_input_values;
+			uint16 h_size_out = ComGroupSignalLocal->ComBitSize;
+			uint8 h_size_in = ComIPduLocal->ComIPduLength * 8;
+			uint8 h_bit_position = ComGroupSignalLocal->ComBitPosition;
+
+			uint8 h_length_in = ComIPduLocal->ComIPduLength;
+			uint8 h_length_out = ComGroupSignalLocal->ComSignalLength;
+			
+			// declare GPU memory pointers
+			uint8* d_output_values, * d_input_values , *d_data;
+			uint16* d_size_out, * d_size_in;
+			uint32* d_bit_position;
+
+			cudaEvent_t start3, stop3;
+			cudaEventCreate(&start3);
+			cudaEventCreate(&stop3);
+			cudaEventRecord(start3);
+
+			// allocate GPU memory
+			cudaMalloc((void**)&d_output_values, h_length_out * sizeof(uint8));
+			cudaMalloc((void**)&d_input_values, h_length_in * sizeof(uint8));
+			cudaMalloc((void**)&d_data, Signals_Factor* h_length_in * sizeof(uint8));
+
+			// transfer the input array to the GPU
+			cudaMemcpyAsync(d_output_values, h_output_values, h_length_out * sizeof(uint8), cudaMemcpyHostToDevice);
+			cudaMemcpyAsync(d_input_values, h_input_values, h_length_in * sizeof(uint8), cudaMemcpyHostToDevice);
+			if (Signals_Factor < 1000) {
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor * h_length_in, cudaMemcpyHostToDevice);
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor * h_length_out, cudaMemcpyHostToDevice);
+			}
+			else {
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor/2 * h_length_in, cudaMemcpyHostToDevice);
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor/2 * h_length_out, cudaMemcpyHostToDevice);
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor/2 * h_length_out, cudaMemcpyHostToDevice);
+				cudaMemcpyAsync(d_data, h_input_values, Signals_Factor/2 * h_length_out, cudaMemcpyHostToDevice);
+			}
+
+			cudaEventRecord(stop3);
+			cudaEventSynchronize(stop3);
+
+
+			cudaEventElapsedTime(&gpu_time[0], start3, stop3);
+
+			cudaEvent_t start2, stop2;
+			cudaEventCreate(&start2);
+			cudaEventCreate(&stop2);
+			cudaEventRecord(start2);
+			///////////////////////////////////////////////* Output Values *//* Input Values *//*size o/p*//*size of i/p*//* bit position of The signal */
+			Unpacking_Bits_kernel << < blocks, threads, threads * sizeof(uint8), stream[ComGroupSignalIndex] >> > (d_output_values, d_input_values, h_size_out, h_size_in, h_bit_position);
+			cudaDeviceSynchronize();
+
+			cudaEventRecord(stop2);
+			cudaEventSynchronize(stop2);
+
+
+			cudaEventElapsedTime(&gpu_time[1], start2, stop2);
+			cudaEventDestroy(start2);
+			cudaEventDestroy(stop2);
+			// Return the results to the signal
+
+			cudaEvent_t start4, stop4;
+			cudaEventCreate(&start4);
+			cudaEventCreate(&stop4);
+			cudaEventRecord(start4);
+
+			// transfer the input array to the GPU
+			cudaMemcpyAsync(h_output_values, d_output_values,  h_length_out * sizeof(uint8), cudaMemcpyDeviceToHost);
+			if (Signals_Factor < 1000) {
+				cudaMemcpyAsync(h_data, d_data, Signals_Factor * h_length_out * sizeof(uint8), cudaMemcpyDeviceToHost);
+			}
+			else {
+				cudaMemcpyAsync(h_data, d_data, Signals_Factor/2 * h_length_out * sizeof(uint8), cudaMemcpyDeviceToHost);
+				cudaMemcpyAsync(h_data, d_data, Signals_Factor/2 * h_length_out * sizeof(uint8), cudaMemcpyDeviceToHost);
+
+			}
+			cudaEventRecord(stop4);
+			cudaEventSynchronize(stop4);
+
+			cudaEventElapsedTime(&gpu_time[2], start4, stop4);
+
+			cudaFree(d_data);
+		}
+
+
+		//}
+
+		//cudaDeviceReset();
+		free(stream);
+		return E_OK;
+
+	}
+	else
+	{
+	}
+
+	return COM_SERVICE_NOT_AVAILABLE;
+}
