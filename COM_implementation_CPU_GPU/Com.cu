@@ -1,3 +1,47 @@
+__global__ void Unpacking_Bits_kernel(uint8* output_buffer, uint8* input_buffer, uint16 output_size, uint16 input_size, uint32 bit_position)
+{
+	const uint16 index = blockIdx.x * blockDim.x + threadIdx.x;
+	const uint16 tid = threadIdx.x;
+
+	extern __shared__ uint8 sdata[8];
+	int valeo = input_buffer[1];
+	if (index >= input_size)
+	{
+		return;
+	}
+
+	if (index + ((bit_position + index) / 8) * 8 >= bit_position && index + ((bit_position + index) / 8) * 8 < bit_position + output_size) {
+
+		//tid -> thread index + No of threads = 8
+		sdata[tid] = (input_buffer[(bit_position + index) / 8] >> (tid) % 8) & 1;
+		sdata[tid] = sdata[tid] << (index % 8);
+	}
+	else
+	{
+		sdata[tid] = 0;
+	}
+
+	__syncthreads();
+
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
+	{
+		if (tid < s) {
+
+			sdata[tid] |= sdata[tid + s];
+
+			// check all threads end the current phase
+			__syncthreads();
+			// go to next phase
+		}
+
+	}
+
+
+	if (tid == 0)
+	{
+		output_buffer[blockIdx.x] = sdata[0];
+	}
+}
 /*********************************************************************************************************************************
 Service name:               Com_ReceiveShadowSignal
 Service ID:                    0x0f
