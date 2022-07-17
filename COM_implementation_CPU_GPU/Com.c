@@ -1,4 +1,44 @@
 /*********************************************************************************************************************************
+ Service name:               Com_UpdateShadowSignal
+ Service ID:                    0x0c
+ Parameters (in):           SignalId--> Id of group signal to be updated.
+                            SignalDataPtr --> Reference to the group signal data to be updated.
+ Parameters (inout):            None
+ Parameters (out):              None
+ Return value:                  None
+ Description:        The service Com_UpdateShadowSignal updates a group signal with the data referenced by SignalDataPtr.
+ *******************************************************************************************************************************/
+void Com_UpdateShadowSignal(Com_SignalIdType SignalId,const void* SignalDataPtr)
+{
+    uint8 ComGroupSignalIndex;
+
+    /* Check that the group signal ID is a valid ID*/
+    if(SignalId < ComMaxGroupSignalCnt)
+    {
+        /*Find GroupSignal with such ID*/
+        for(ComGroupSignalIndex = 0; ComGroupSignalIndex < ComMaxGroupSignalCnt; ComGroupSignalIndex++)
+        {
+            if(Com.ComConfig.ComGroupSignal[ComGroupSignalIndex].ComHandleId == SignalId)
+            {
+                /* Copy group signal to group signal buffer */
+                memcpy(Com.ComConfig.ComGroupSignal[SignalId].ComBufferRef, SignalDataPtr, Com.ComConfig.ComGroupSignal[SignalId].ComSignalLength);
+                return;
+            }
+            else
+            {
+
+            }
+        }
+
+    }
+    else
+    {
+
+    }
+}
+
+
+/*********************************************************************************************************************************
  Service name:               Com_ReceiveShadowSignal
  Service ID:                    0x0f
  Parameters (in):           SignalId--> Id of group signal to be received.
