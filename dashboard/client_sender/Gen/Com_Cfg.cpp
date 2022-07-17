@@ -17,15 +17,15 @@ AUTOSAR Version:                                          4.2.2
 extern Ui::MainWindowClass* ui_extern;
 
 /* ComSignal Buffers */
-uint8 ComSignal0Buffer[1] = { 0 };
-uint8 ComSignal1Buffer[1] = { 0 };
-uint8 ComSignal2Buffer[1] = { 0 };
-uint8 ComSignal3Buffer[1] = { 0 };
-uint8 ComSignal4Buffer[1] = { 0 };
-uint8 ComSignal5Buffer[1] = { 0 };
-uint8 ComSignal6Buffer[1] = { 0 };
-uint8 ComSignal7Buffer[1] = { 0 }; //8
-uint8 ComSignal8Buffer[1] = { 0 }; //4
+uint8 ComSignal0Buffer[1];
+uint8 ComSignal1Buffer[1];
+uint8 ComSignal2Buffer[1];
+uint8 ComSignal3Buffer[1];
+uint8 ComSignal4Buffer[1];
+uint8 ComSignal5Buffer[1];
+uint8 ComSignal6Buffer[1];
+uint8 ComSignal7Buffer[1]; //8
+uint8 ComSignal8Buffer[1]; //4
 
 // /* ComGroupSignal Buffers */
 // uint8 ComGroupSignal0Buffer[2];
@@ -35,42 +35,42 @@ uint8 ComSignal8Buffer[1] = { 0 }; //4
 uint8 ComIPdu0Buffer[2]; // signals 1 bit
 uint8 ComIPdu1Buffer[2]; // signals of speed and tachometer
 
-void Com_CbkSignal0RxAck(void)
+void Com_CbkSignal0TxAck(void)
 {
 }
 
-void Com_CbkSignal1RxAck(void)
+void Com_CbkSignal1TxAck(void)
 {
     //UARTprintf("Com_CbkSignal1TxAck\n");
 }
-void Com_CbkSignal2RxAck(void)
+void Com_CbkSignal2TxAck(void)
 {
     //printf("Com_CbkSignal0TxAck\n");
 }
 
-void Com_CbkSignal3RxAck(void)
+void Com_CbkSignal3TxAck(void)
 {
     //UARTprintf("Com_CbkSignal1TxAck\n");
 }
-void Com_CbkSignal4RxAck(void)
+void Com_CbkSignal4TxAck(void)
 {
     //printf("Com_CbkSignal0TxAck\n");
 }
 
-void Com_CbkSignal5RxAck(void)
+void Com_CbkSignal5TxAck(void)
 {
     //UARTprintf("Com_CbkSignal1TxAck\n");
 }
-void Com_CbkSignal6RxAck(void)
+void Com_CbkSignal6TxAck(void)
 {
     //printf("Com_CbkSignal0TxAck\n");
 }
 
-void Com_CbkSignal7RxAck(void)
+void Com_CbkSignal7TxAck(void)
 {
     //UARTprintf("Com_CbkSignal1TxAck\n");
 }
-void Com_CbkSignal8RxAck(void)
+void Com_CbkSignal8TxAck(void)
 {
     //printf("Com_CbkSignal0TxAck\n");
 }
@@ -85,7 +85,7 @@ Com_Type Com =
         .ComIPdu =
         {
             {
-               .ComIPduDirection = Receive,
+               .ComIPduDirection = Send,
                .ComIPduHandleId = 0,
                .ComIPduSignalProcessing = IMMEDIATE,
                .ComIPduType = NORMAL, // can be omiited
@@ -101,13 +101,13 @@ Com_Type Com =
                 },
                .ComIPduSignalRef =
                 {
-                    &Com.ComConfig.ComSignal[0],
-                    &Com.ComConfig.ComSignal[1],
-                    &Com.ComConfig.ComSignal[2],
-                    &Com.ComConfig.ComSignal[3],
-                    &Com.ComConfig.ComSignal[4],
-                    &Com.ComConfig.ComSignal[5],
-                    &Com.ComConfig.ComSignal[6],
+                    &Com.ComConfig.ComSignal[0], //fuel
+                    &Com.ComConfig.ComSignal[1], //opendoor
+                    &Com.ComConfig.ComSignal[2], //light
+                    &Com.ComConfig.ComSignal[3], //battery
+                    &Com.ComConfig.ComSignal[4], //fix
+                    &Com.ComConfig.ComSignal[5], //left
+                    &Com.ComConfig.ComSignal[6], //right
                     NULL
                 },
                 .ComTxIPdu =
@@ -130,7 +130,7 @@ Com_Type Com =
                 .ComIPduLength = 2
             },
             {
-               .ComIPduDirection = Receive,
+               .ComIPduDirection = Send,
                .ComIPduHandleId = 1,
                .ComIPduSignalProcessing = IMMEDIATE,
                .ComIPduType = NORMAL, // can be omiited
@@ -177,7 +177,7 @@ Com_Type Com =
              .ComBitPosition = 0, // position within ipdu
              .ComBitSize = 1,	  // size in bits
              .ComHandleId = 0,
-             .ComNotification = &Com_CbkSignal0RxAck, // only in sender side we may not need it
+             .ComNotification = &Com_CbkSignal0TxAck, // only in sender side we may not need it
              .ComSignalEndianness = LITTLE_ENDIAN, // can be omitted	  // 
              .ComSignalLength = 1, // size in bytes
              .ComSignalType = UINT8,// type of signal
@@ -190,7 +190,7 @@ Com_Type Com =
              .ComBitPosition = 1,
              .ComBitSize = 1,
              .ComHandleId = 1,
-             .ComNotification = &Com_CbkSignal1RxAck,
+             .ComNotification = &Com_CbkSignal1TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 1,
              .ComSignalType = UINT8,
@@ -203,7 +203,7 @@ Com_Type Com =
              .ComBitPosition = 2,
              .ComBitSize = 1,
              .ComHandleId = 2,
-             .ComNotification = &Com_CbkSignal2RxAck,
+             .ComNotification = &Com_CbkSignal2TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 1,
              .ComSignalType = UINT8,
@@ -214,9 +214,9 @@ Com_Type Com =
             },
             { //3
              .ComBitPosition = 3,
-             .ComBitSize = 1,
+             .ComBitSize = 3,
              .ComHandleId = 3,
-             .ComNotification = &Com_CbkSignal3RxAck,
+             .ComNotification = &Com_CbkSignal3TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 1,
              .ComSignalType = UINT8,
@@ -229,7 +229,7 @@ Com_Type Com =
              .ComBitPosition = 4,
              .ComBitSize = 1,
              .ComHandleId = 4,
-             .ComNotification = &Com_CbkSignal4RxAck,
+             .ComNotification = &Com_CbkSignal4TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 11,
              .ComSignalType = UINT8,
@@ -242,7 +242,7 @@ Com_Type Com =
              .ComBitPosition = 5,
              .ComBitSize = 1,
              .ComHandleId = 5,
-             .ComNotification = &Com_CbkSignal5RxAck,
+             .ComNotification = &Com_CbkSignal5TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 12,
              .ComSignalType = UINT8,
@@ -255,7 +255,7 @@ Com_Type Com =
              .ComBitPosition = 6,
              .ComBitSize = 1,
              .ComHandleId = 6,
-             .ComNotification = &Com_CbkSignal6RxAck,
+             .ComNotification = &Com_CbkSignal6TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 13,
              .ComSignalType = UINT8,
@@ -265,10 +265,10 @@ Com_Type Com =
              .ComBufferRef = ComSignal6Buffer
             },
             {
-             .ComBitPosition = 7,
+             .ComBitPosition = 0,
              .ComBitSize = 8,
              .ComHandleId = 7,
-             .ComNotification = &Com_CbkSignal7RxAck,
+             .ComNotification = &Com_CbkSignal7TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 1,
              .ComSignalType = UINT8,
@@ -282,7 +282,7 @@ Com_Type Com =
              .ComBitPosition = 8,
              .ComBitSize = 4,
              .ComHandleId = 8,
-             .ComNotification = &Com_CbkSignal8RxAck,
+             .ComNotification = &Com_CbkSignal8TxAck,
              .ComSignalEndianness = LITTLE_ENDIAN,
              .ComSignalLength = 1,
              .ComSignalType = UINT8,
