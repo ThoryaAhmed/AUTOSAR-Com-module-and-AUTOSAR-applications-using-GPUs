@@ -12,7 +12,7 @@ AUTOSAR Version:                                          4.2.2
 **                                                                        Defines                                                                                **
 ********************************************************************************************************************************/
 #define   COM_TX_IPDU_UNUSED_AREAS_DEFAULT   (uint8)0x00
-#define   COM_SIGNAL_INIT_VALUE (uint8)0xFF
+#define   COM_SIGNAL_INIT_VALUE (uint8)0x00
 #define ComMaxSignalGroupCnt   (uint8)2
 #define ComMaxGroupSignalCnt   (uint8)2
 #define ComMaxSignalCnt   (uint8)9
